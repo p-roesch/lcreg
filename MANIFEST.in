@@ -1,0 +1,3 @@
+include LICENSE.txt
+include lcreg/*.pyx
+include lcreg/*.pxd
