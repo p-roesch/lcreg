@@ -9,15 +9,12 @@ if __name__ == '__main__':
     import lcreg
 
     if platform.startswith('win'):
-        comp_args = ['/O2', ]
         openmp_comp_args = ['/O2', '/openmp', ]
         openmp_link_args = ['/openmp', ]
     elif platform.startswith('linux'):
-        comp_args = ['-DNDEBUG', '-O3', ]
         openmp_comp_args = ['-DNDEBUG', '-O3', '-fopenmp', ]
         openmp_link_args = ['-fopenmp']
     elif platform.startswith('darwin'):
-        comp_args = ['-DNDEBUG', '-O3', ]
         openmp_comp_args = ['-DNDEBUG', '-O3', '-fopenmp', ]
         openmp_link_args = ['-fopenmp', '-lgomp']
     else:
@@ -57,6 +54,7 @@ if __name__ == '__main__':
             'scipy>=1.2',
             'bcolz>=1.2',
             'psutil>=5.6',
+            'py-cpuinfo>=7.0'
           ],
           entry_points={
               'console_scripts': [
@@ -64,6 +62,7 @@ if __name__ == '__main__':
                   'lcreg_profile=lcreg.lcreg:profiling_main',
                   'view_compressed_images=lcreg.view_compressed_images:main',
                   'abs_difference_mhd=lcreg.image3d:abs_difference_mhd_main',
+                  'difference_mhd=lcreg.image3d:difference_mhd_main',
                   'isq_to_mhd=lcreg.isq_to_mhd:main',
                   ], },
           ext_modules=[Extension("lcreg.lcreg_lib",
