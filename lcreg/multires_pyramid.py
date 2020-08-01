@@ -267,22 +267,3 @@ def create_pyramid(reg_config):
             list_name = n.replace('base', 'files')
             reg_config.set('pyramid', list_name, str(file_name_list))
     logging.info('Pyramid generation done')
-
-
-def __main():
-    s = 1.25/0.653595
-    scale_tuple = (s, s, 1)
-
-    mhd_im_name = '../test_data/training_001/ct/training_001_ct.mhd'
-    in_im_name = '/SSD/roesch/in_im'
-    out_im_name = '/SSD/roesch/in_im_resampled'
-    scale_factor = np.array(scale_tuple, dtype=np.float64)
-    image3d.import_image(mhd_im_name, in_im_name)
-    image3d.export_bcolz_image(in_im_name, in_im_name+'.mhd')
-    _blockwise_resample(in_im_name, out_im_name, scale_factor,
-                        mem_limit_mb=-1, thread_num=1)
-    image3d.export_bcolz_image(out_im_name, out_im_name+'.mhd')
-
-
-if __name__ == '__main__':
-    __main()
