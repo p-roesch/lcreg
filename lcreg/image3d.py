@@ -355,6 +355,17 @@ MHD_DEFAULTS = OrderedDict([
 ])
 
 
+def _calculate_header_size(raw_file_name, param):
+    header_size = int(param['HeaderSize'])
+    if header_size == -1:
+        type_str = _MHD_TYPES[param['ElementType']][1]
+        dim_size = string_to_array(param['DimSize'], np.uint32)
+        array_size_in_bytes = int(np.prod(dim_size)) * \
+            np.dtype(type_str).itemsize
+        header_size = os.path.getsize(raw_file_name) - array_size_in_bytes
+    return header_size
+
+
 def read_mhd_param(in_file_name):
     """
     Read meta image header file into ordered dictionary
@@ -541,12 +552,7 @@ def import_image(in_file_name, root_dir_name,
     dir_name = os.path.dirname(in_file_name)
     raw_file_name = os.path.join(dir_name, param['ElementDataFile'])
     # calculate header size
-    header_size = int(param['HeaderSize'])
-    if header_size == -1:
-        type_str = _MHD_TYPES[param['ElementType']][1]
-        array_size_in_bytes = int(np.prod(dim_size)) * \
-            np.dtype(type_str).itemsize
-        header_size = os.path.getsize(raw_file_name) - array_size_in_bytes
+    header_size = _calculate_header_size(raw_file_name, param)
     # for float input images, the default accuracy is 10 bit
     if dtype in (np.float32, np.float64):
         g_min = np.finfo(dtype).max
@@ -800,7 +806,7 @@ def resample_mhd(fixed_mhd_file_name, moving_mhd_file_name,
         from scipy.ndimage import affine_transform
     except ImportError:
         logging.error('scipy not installaed')
-        print('image resampling requires scipy or c3d')
+        print('image resampling requires scipy')
         return
     # read mhd files
     fixed_mhd = read_mhd_param(fixed_mhd_file_name)
@@ -824,15 +830,20 @@ def resample_mhd(fixed_mhd_file_name, moving_mhd_file_name,
     out_raw_name = os.path.join(os.path.dirname(out_mhd_file_name),
                                 out_data_name)
     out_mhd['ElementDataFile'] = out_data_name
+    out_mhd['HeaderSize'] = '0'
     write_mhd_file(out_mhd, out_mhd_file_name)
     # open mmaps
-    moving_data_file_name = os.path.join(os.path.dirname(moving_mhd_file_name),
-                                         moving_mhd['ElementDataFile'])
+    moving_data_file_name = \
+        os.path.join(os.path.dirname(moving_mhd_file_name),
+                     moving_mhd['ElementDataFile'])
+    moving_offset = _calculate_header_size(moving_data_file_name, moving_mhd)
     moving_data = np.memmap(moving_data_file_name,
                             dtype=np.dtype(moving_dtype),
-                            mode='r', shape=tuple(moving_shape))
+                            mode='r', shape=tuple(moving_shape),
+                            offset=moving_offset)
     out_data = np.memmap(out_raw_name, dtype=np.dtype(out_dtype),
-                         shape=tuple(out_shape), mode='write')
+                         shape=tuple(out_shape), mode='write',
+                         offset=0)
     # perform transform using linear interpolation
     affine_transform(moving_data, matrix, offset,
                      output_shape=out_data.shape, output=out_data, order=1,
@@ -843,8 +854,8 @@ def resample_mhd(fixed_mhd_file_name, moving_mhd_file_name,
     del out_data
 
 
-def abs_difference_image_mhd(im1_mhd_file_name, im2_mhd_file_name,
-                             out_mhd_file_name):
+def difference_image_mhd(im1_mhd_file_name, im2_mhd_file_name,
+                         out_mhd_file_name, calculate_abs=True):
     """
         Calculate absolute voxel by voxel difference betwen two images.
 
@@ -854,6 +865,7 @@ def abs_difference_image_mhd(im1_mhd_file_name, im2_mhd_file_name,
             im1_mhd_file_name (str): name of first image mhd file
             im2_mhd_file_name (str): name of second image mhd file
             out_mhd_file_name (str): name of output image mhd file
+            calculate_abs (boolean): flag for absolute value calculation
     """
     # read mhd files
     im1_mhd = read_mhd_param(im1_mhd_file_name)
@@ -888,22 +900,31 @@ def abs_difference_image_mhd(im1_mhd_file_name, im2_mhd_file_name,
         out_raw_name = os.path.join(os.path.dirname(out_mhd_file_name),
                                     out_data_name)
         out_mhd['ElementDataFile'] = out_data_name
+        out_mhd['HeaderSize'] = '0'
         write_mhd_file(out_mhd, out_mhd_file_name)
         # open mmaps
         im1_data_file_name = os.path.join(os.path.dirname(im1_mhd_file_name),
                                           im1_mhd['ElementDataFile'])
+        im1_offset = _calculate_header_size(im1_data_file_name, im1_mhd)
         im1_data = np.memmap(im1_data_file_name,
                              dtype=np.dtype(im1_dtype),
-                             mode='r', shape=tuple(im1_shape))
+                             mode='r', shape=tuple(im1_shape),
+                             offset=im1_offset)
         im2_data_file_name = os.path.join(os.path.dirname(im2_mhd_file_name),
                                           im2_mhd['ElementDataFile'])
+        im2_offset = _calculate_header_size(im2_data_file_name, im2_mhd)
         im2_data = np.memmap(im2_data_file_name,
                              dtype=np.dtype(im2_dtype),
-                             mode='r', shape=tuple(im2_shape))
+                             mode='r', shape=tuple(im2_shape),
+                             offset=im2_offset)
         out_data = np.memmap(out_raw_name, dtype=np.dtype(out_dtype),
-                             shape=tuple(out_shape), mode='write')
+                             shape=tuple(out_shape), mode='write',
+                             offset=0)
         # calculate difference
-        np.abs(im1_data - im2_data, out=out_data)
+        if calculate_abs:
+            np.abs(im1_data - im2_data, out=out_data)
+        else:
+            np.subtract(im1_data, im2_data, out=out_data)
         # cleanup
         out_data.flush()
         del im1_data
@@ -918,4 +939,16 @@ def abs_difference_mhd_main():
         print('calculate absolute difference between two mhd images')
         print('usage: abs_difference_mhd im1_name im2_name out_im_name')
     else:
-        abs_difference_image_mhd(sys.argv[1], sys.argv[2], sys.argv[3])
+        difference_image_mhd(sys.argv[1], sys.argv[2], sys.argv[3],
+                                 calculate_abs=True)
+
+
+def difference_mhd_main():
+    #
+    # usage message
+    if len(sys.argv) < 3:
+        print('calculate signed difference between two mhd images')
+        print('usage: difference_mhd im1_name im2_name out_im_name')
+    else:
+        difference_image_mhd(sys.argv[1], sys.argv[2], sys.argv[3],
+                                 calculate_abs=False)
