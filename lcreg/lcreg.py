@@ -98,10 +98,9 @@ def set_up_logging(reg_config, argv):
             try:
                 import cpuinfo
                 cpu_info = cpuinfo.get_cpu_info()
-                logging.info('CPU: {}'.format(cpu_info['brand']))
-            except ImportError:
+                logging.info('CPU: {}'.format(cpu_info['brand_raw']))
+            except Exception:
                 logging.warn('CPU: unknown type')
-                logging.warn('     Package py-cpuinfo not installed')
             #
             # print maximum CPU frequency if value is available
             freq = psutil.cpu_freq()
@@ -528,10 +527,13 @@ def create_transformed_mhd(reg_config):
     moving_mhd = image3d.read_mhd_param(moving_mhd_name)
 
     # update mhd
-    moving_mhd['ElementDataFile'] = os.path.join(
-        os.path.abspath(
-            os.path.dirname(reg_config['DEFAULT']['moving_image_name'])),
-        os.path.basename(moving_mhd['ElementDataFile']))
+    if os.path.isabs(moving_mhd['ElementDataFile']):
+        data_file_name = moving_mhd['ElementDataFile']
+    else:
+        data_file_name = os.path.abspath(os.path.join(
+            os.path.dirname(moving_mhd_name), moving_mhd['ElementDataFile']))
+
+    moving_mhd['ElementDataFile'] = data_file_name
     moving_mhd['Offset'] = array_to_string(new_offset)
     # transpose rotation matrix for mhd export
     moving_mhd['TransformMatrix'] = \
@@ -585,13 +587,17 @@ def export_results(reg_config, script_suffix):
     c3d_call += ' '
     c3d_call += '-reslice-matrix'
     c3d_call += ' '
-    c3d_call += os.path.join(reg_config['DEFAULT']['output_directory_name'],
-                             'lcreg_result.mat')
+    c3d_call += os.path.abspath(
+                    os.path.join(
+                        reg_config['DEFAULT']['output_directory_name'],
+                        'lcreg_result.mat'))
     c3d_call += ' '
     c3d_call += '-int Cubic -o'
     c3d_call += ' '
-    c3d_call += os.path.join(reg_config['DEFAULT']['output_directory_name'],
-                             'resampled_moving_image_c3d.mhd')
+    c3d_call += os.path.abspath(
+                    os.path.join(
+                        reg_config['DEFAULT']['output_directory_name'],
+                        'resampled_moving_image_c3d.mhd'))
     file_name = os.path.join(reg_config['DEFAULT']['output_directory_name'],
                              'c3d_call.'+script_suffix)
     with open(file_name, 'w') as out_file:
