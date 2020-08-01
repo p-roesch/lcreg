@@ -47,6 +47,8 @@ __ISQ_OFFSETS_INT_4 = {
     'min_data_value': 20,
     'max_data_value': 21,
     'mu_scaling': 22,
+    'energy' : 42,
+    'intensity' : 43,
     'data_offset': -1
 }
 
@@ -65,7 +67,6 @@ __MHD_DEFAULTS = OrderedDict([
     ('DimSize', '1 1 1'),
     ('HeaderSize', '-1'),
     ('ElementType', 'MET_SHORT'),
-    ('ElementDataFile', 'binary.raw'),
 ])
 
 
@@ -95,17 +96,30 @@ def _read_isq_param(in_file_name):
         dim_p_str += str(dim_p) + ' '
         element_spacing_mm = dim_um / dim_p / 1000.
         element_spacing_str += str(element_spacing_mm) + ' '
-    # set mhd parameters
-    param['DimSize'] = dim_p_str[:-1]
-    param['ElementSpacing'] = element_spacing_str[:-1]
-    param['ElementDataFile'] = os.path.basename(in_file_name)
-    param['ElementType'] = 'MET_SHORT'
-    param['HeaderSize'] = '-1'
-    # calculate offset for grey value loading
-    offset = (isq_header[__ISQ_OFFSETS_INT_4['data_offset']] + 1) * 512
     # get grey value range for windowing
     grey_min = isq_header[__ISQ_OFFSETS_INT_4['min_data_value']]
     grey_max = isq_header[__ISQ_OFFSETS_INT_4['max_data_value']]
+    # set mhd parameters
+    param['DimSize'] = dim_p_str[:-1]
+    param['ElementSpacing'] = element_spacing_str[:-1]
+    param['ElementType'] = 'MET_SHORT'
+    param['HeaderSize'] = '-1'
+    param['ISQ_slice_thickness_um'] = \
+        str(isq_header[__ISQ_OFFSETS_INT_4['slice_thickness']])
+    param['ISQ_slice_increment_um'] = \
+        str(isq_header[__ISQ_OFFSETS_INT_4['slice_increment_um']])
+    param['ISQ_slice_1_pos_um'] = \
+        str(isq_header[__ISQ_OFFSETS_INT_4['slice_1_pos_um']])
+    param['ISQ_min_data_value'] = str(grey_min)
+    param['ISQ_max_data_value'] = str(grey_max)
+    param['ISQ_mu_scaling'] = \
+        str(isq_header[__ISQ_OFFSETS_INT_4['mu_scaling']])
+    param['ISQ_energy_V'] = str(isq_header[__ISQ_OFFSETS_INT_4['energy']])
+    param['ISQ_intensity_muA'] = \
+        str(isq_header[__ISQ_OFFSETS_INT_4['intensity']])
+    param['ElementDataFile'] = os.path.basename(in_file_name)
+    # calculate offset for grey value loading
+    offset = (isq_header[__ISQ_OFFSETS_INT_4['data_offset']] + 1) * 512
     grey_range = (grey_min, grey_max)
     return param, offset, grey_range
 
@@ -118,7 +132,10 @@ def isq_to_mhd(isq_file_name, mhd_file_name):
             mhd_file_name (str): name of mhd file to be written
     """
     mhd_param, offset, grey_range = _read_isq_param(isq_file_name)
-    mhd_param['ElementDataFile'] = isq_file_name
+    if os.sep in mhd_file_name:
+        mhd_param['ElementDataFile'] = os.path.abspath(isq_file_name)
+    else:
+        mhd_param['ElementDataFile'] = isq_file_name
     with open(mhd_file_name, 'w') as out_file:
         for i in mhd_param.items():
             out_file.write(i[0] + ' = ' + i[1] + '\n')
