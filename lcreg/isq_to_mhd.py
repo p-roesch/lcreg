@@ -35,39 +35,41 @@ import numpy as np
 # Source: http://www.scanco.ch/en/support/customer-login/\
 #                           faq-customers/faq-customers-general.html
 __ISQ_OFFSETS_INT_4 = {
-    'dimx_p': 11,
-    'dimy_p': 12,
-    'dimz_p': 13,
-    'dimx_um': 14,
-    'dimy_um': 15,
-    'dimz_um': 16,
-    'slice_thickness': 17,
-    'slice_increment_um': 18,
-    'slice_1_pos_um': 19,
-    'min_data_value': 20,
-    'max_data_value': 21,
-    'mu_scaling': 22,
-    'energy' : 42,
-    'intensity' : 43,
-    'data_offset': -1
+    "dimx_p": 11,
+    "dimy_p": 12,
+    "dimz_p": 13,
+    "dimx_um": 14,
+    "dimy_um": 15,
+    "dimz_um": 16,
+    "slice_thickness": 17,
+    "slice_increment_um": 18,
+    "slice_1_pos_um": 19,
+    "min_data_value": 20,
+    "max_data_value": 21,
+    "mu_scaling": 22,
+    "energy": 42,
+    "intensity": 43,
+    "data_offset": -1,
 }
 
 # Default values for mhd file parameters
-__MHD_DEFAULTS = OrderedDict([
-    ('ObjectType', 'Image'),
-    ('NDims', '3'),
-    ('BinaryData', 'True'),
-    ('BinaryDataByteOrderMSB', 'False'),
-    ('CompressedData', 'False'),
-    ('TransformMatrix', '1 0 0 0 1 0 0 0 1'),
-    ('Offset', '0 0 0'),
-    ('CenterOfRotation', '0 0 0'),
-    ('AnatomicalOrientation', 'RAI'),
-    ('ElementSpacing', '1 1 1'),
-    ('DimSize', '1 1 1'),
-    ('HeaderSize', '-1'),
-    ('ElementType', 'MET_SHORT'),
-])
+__MHD_DEFAULTS = OrderedDict(
+    [
+        ("ObjectType", "Image"),
+        ("NDims", "3"),
+        ("BinaryData", "True"),
+        ("BinaryDataByteOrderMSB", "False"),
+        ("CompressedData", "False"),
+        ("TransformMatrix", "1 0 0 0 1 0 0 0 1"),
+        ("Offset", "0 0 0"),
+        ("CenterOfRotation", "0 0 0"),
+        ("AnatomicalOrientation", "RAI"),
+        ("ElementSpacing", "1 1 1"),
+        ("DimSize", "1 1 1"),
+        ("HeaderSize", "-1"),
+        ("ElementType", "MET_SHORT"),
+    ]
+)
 
 
 def _read_isq_param(in_file_name):
@@ -85,41 +87,46 @@ def _read_isq_param(in_file_name):
     param = __MHD_DEFAULTS.copy()
     isq_header = np.fromfile(in_file_name, np.int32, 128)
     # swap bytes if required
-    if sys.byteorder == 'big':
+    if sys.byteorder == "big":
         isq_header = isq_header.byteswap()
-    dim_p_str = ''
-    element_spacing_str = ''
+    dim_p_str = ""
+    element_spacing_str = ""
     # load image dimensions and calculate element spacing
     for i in range(3):
-        dim_p = isq_header[__ISQ_OFFSETS_INT_4['dimx_p'] + i]
-        dim_um = isq_header[__ISQ_OFFSETS_INT_4['dimx_um'] + i]
-        dim_p_str += str(dim_p) + ' '
-        element_spacing_mm = dim_um / dim_p / 1000.
-        element_spacing_str += str(element_spacing_mm) + ' '
+        dim_p = isq_header[__ISQ_OFFSETS_INT_4["dimx_p"] + i]
+        dim_um = isq_header[__ISQ_OFFSETS_INT_4["dimx_um"] + i]
+        dim_p_str += str(dim_p) + " "
+        element_spacing_mm = dim_um / dim_p / 1000.0
+        element_spacing_str += str(element_spacing_mm) + " "
     # get grey value range for windowing
-    grey_min = isq_header[__ISQ_OFFSETS_INT_4['min_data_value']]
-    grey_max = isq_header[__ISQ_OFFSETS_INT_4['max_data_value']]
+    grey_min = isq_header[__ISQ_OFFSETS_INT_4["min_data_value"]]
+    grey_max = isq_header[__ISQ_OFFSETS_INT_4["max_data_value"]]
     # set mhd parameters
-    param['DimSize'] = dim_p_str[:-1]
-    param['ElementSpacing'] = element_spacing_str[:-1]
-    param['ElementType'] = 'MET_SHORT'
-    param['HeaderSize'] = '-1'
-    param['ISQ_slice_thickness_um'] = \
-        str(isq_header[__ISQ_OFFSETS_INT_4['slice_thickness']])
-    param['ISQ_slice_increment_um'] = \
-        str(isq_header[__ISQ_OFFSETS_INT_4['slice_increment_um']])
-    param['ISQ_slice_1_pos_um'] = \
-        str(isq_header[__ISQ_OFFSETS_INT_4['slice_1_pos_um']])
-    param['ISQ_min_data_value'] = str(grey_min)
-    param['ISQ_max_data_value'] = str(grey_max)
-    param['ISQ_mu_scaling'] = \
-        str(isq_header[__ISQ_OFFSETS_INT_4['mu_scaling']])
-    param['ISQ_energy_V'] = str(isq_header[__ISQ_OFFSETS_INT_4['energy']])
-    param['ISQ_intensity_muA'] = \
-        str(isq_header[__ISQ_OFFSETS_INT_4['intensity']])
-    param['ElementDataFile'] = os.path.basename(in_file_name)
+    param["DimSize"] = dim_p_str[:-1]
+    param["ElementSpacing"] = element_spacing_str[:-1]
+    param["ElementType"] = "MET_SHORT"
+    param["HeaderSize"] = "-1"
+    param["ISQ_slice_thickness_um"] = str(
+        isq_header[__ISQ_OFFSETS_INT_4["slice_thickness"]]
+    )
+    param["ISQ_slice_increment_um"] = str(
+        isq_header[__ISQ_OFFSETS_INT_4["slice_increment_um"]]
+    )
+    param["ISQ_slice_1_pos_um"] = str(
+        isq_header[__ISQ_OFFSETS_INT_4["slice_1_pos_um"]]
+    )
+    param["ISQ_min_data_value"] = str(grey_min)
+    param["ISQ_max_data_value"] = str(grey_max)
+    param["ISQ_mu_scaling"] = str(
+        isq_header[__ISQ_OFFSETS_INT_4["mu_scaling"]]
+    )
+    param["ISQ_energy_V"] = str(isq_header[__ISQ_OFFSETS_INT_4["energy"]])
+    param["ISQ_intensity_muA"] = str(
+        isq_header[__ISQ_OFFSETS_INT_4["intensity"]]
+    )
+    param["ElementDataFile"] = os.path.basename(in_file_name)
     # calculate offset for grey value loading
-    offset = (isq_header[__ISQ_OFFSETS_INT_4['data_offset']] + 1) * 512
+    offset = (isq_header[__ISQ_OFFSETS_INT_4["data_offset"]] + 1) * 512
     grey_range = (grey_min, grey_max)
     return param, offset, grey_range
 
@@ -133,21 +140,21 @@ def isq_to_mhd(isq_file_name, mhd_file_name):
     """
     mhd_param, offset, grey_range = _read_isq_param(isq_file_name)
     if os.sep in mhd_file_name:
-        mhd_param['ElementDataFile'] = os.path.abspath(isq_file_name)
+        mhd_param["ElementDataFile"] = os.path.abspath(isq_file_name)
     else:
-        mhd_param['ElementDataFile'] = isq_file_name
-    with open(mhd_file_name, 'w') as out_file:
+        mhd_param["ElementDataFile"] = isq_file_name
+    with open(mhd_file_name, "w") as out_file:
         for i in mhd_param.items():
-            out_file.write(i[0] + ' = ' + i[1] + '\n')
+            out_file.write(i[0] + " = " + i[1] + "\n")
 
 
 def main():
     if len(sys.argv) != 3:
-        print('usage: isq_to_mhd isq_file_name mhd_file_name')
+        print("usage: isq_to_mhd isq_file_name mhd_file_name")
         sys.exit(0)
     else:
         isq_to_mhd(sys.argv[1], sys.argv[2])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

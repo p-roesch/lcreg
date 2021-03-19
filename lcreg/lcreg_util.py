@@ -1,21 +1,21 @@
 # lcreg: Efficent rigid and affine 3D image registration
-# 
+#
 # Copyright (C) 2019  Peter Rösch, Peter.Roesch@hs-augsburg.de
-# 
+#
 # Organisation:
 # Faculty of Computer Science, Augsburg University of Applied Sciences,
 # An der Hochschule 1, 86161 Augsburg, Germany
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
@@ -41,7 +41,7 @@ def array_to_string(arr):
     if not isinstance(arr, np.ndarray):
         arr = np.array(arr)
     string = str(arr.flatten())[1:-1].strip()
-    return ' '.join(string.split())
+    return " ".join(string.split())
 
 
 def string_to_array(string, dtype=np.float64):
@@ -55,8 +55,8 @@ def string_to_array(string, dtype=np.float64):
         numpy array from string with requested dtype
 
     """
-    string = ' '.join(string.split())
-    arr_str = '[' + string.replace(' ', ',') + ']'
+    string = " ".join(string.split())
+    arr_str = "[" + string.replace(" ", ",") + "]"
     return np.array(ast.literal_eval(arr_str), dtype=dtype)
 
 
@@ -71,7 +71,7 @@ def system_memory_available_mb():
     """
     Get 50% of available memory in MB
     """
-    mem_limit_mb = int(psutil.virtual_memory().available // 2**21)
+    mem_limit_mb = int(psutil.virtual_memory().available // 2 ** 21)
     return mem_limit_mb
 
 
@@ -82,10 +82,10 @@ def corners_vox_x_y_z(im):
     Args:
         im (Image3D or numpy array): image
     """
-    for z in (0, im.shape[0]-1):
-        for y in (0, im.shape[1]-1):
-            for x in (0, im.shape[2]-1):
-                yield(x, y, z)
+    for z in (0, im.shape[0] - 1):
+        for y in (0, im.shape[1] - 1):
+            for x in (0, im.shape[2] - 1):
+                yield (x, y, z)
 
 
 def image_corners_vox(im):
@@ -109,6 +109,5 @@ def image_corners_world(im):
     Args:
         im (Image3d): image
     """
-    corners_world = np.dot(im.voxel_to_world_matrix,
-                           image_corners_vox(im))
+    corners_world = np.dot(im.voxel_to_world_matrix, image_corners_vox(im))
     return corners_world

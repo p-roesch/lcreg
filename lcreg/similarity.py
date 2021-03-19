@@ -1,21 +1,21 @@
 # lcreg: Efficent rigid and affine 3D image registration
-# 
+#
 # Copyright (C) 2019  Peter Rösch, Peter.Roesch@hs-augsburg.de
-# 
+#
 # Organisation:
 # Faculty of Computer Science, Augsburg University of Applied Sciences,
 # An der Hochschule 1, 86161 Augsburg, Germany
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
@@ -57,7 +57,7 @@ def __create_N_buf(fixed_im):
         Returns:
             numpy.array (1xfixed_im.shape[0], numpy.int64): accumulation buffer
     """
-    return np.zeros(shape=(fixed_im.shape[0], ), dtype=np.int64)
+    return np.zeros(shape=(fixed_im.shape[0],), dtype=np.int64)
 
 
 def __create_lcc_buf(fixed_im):
@@ -70,7 +70,7 @@ def __create_lcc_buf(fixed_im):
         Returns:
             numpy.array (1xfixed_im.shape[0], numpy.float64): Buffer
     """
-    return np.zeros(shape=(fixed_im.shape[0], ), dtype=np.float64)
+    return np.zeros(shape=(fixed_im.shape[0],), dtype=np.float64)
 
 
 def __create_gradient_buf(fixed_im, p):
@@ -99,12 +99,23 @@ def __create_hessian_buf(fixed_im, p):
             numpy.array (fixed_im.shape[0] x len(p) x len(p), numpy.float64):
                 Buffer
     """
-    return np.zeros(shape=(fixed_im.shape[0], len(p), len(p)),
-                    dtype=np.float64)
+    return np.zeros(
+        shape=(fixed_im.shape[0], len(p), len(p)), dtype=np.float64
+    )
 
 
-def __calc_lcc(fixed_im, moving_im, p, with_derivatives, N_sum, lcc_sum,
-               gradient_sum, hessian_sum, thread_num=-1, use_rle=True):
+def __calc_lcc(
+    fixed_im,
+    moving_im,
+    p,
+    with_derivatives,
+    N_sum,
+    lcc_sum,
+    gradient_sum,
+    hessian_sum,
+    thread_num=-1,
+    use_rle=True,
+):
     """
         Calculate the LCC measure with or without derivatives
             (Python interface)
@@ -149,14 +160,30 @@ def __calc_lcc(fixed_im, moving_im, p, with_derivatives, N_sum, lcc_sum,
     if with_derivatives:
         gradient_buf = __create_gradient_buf(fixed_im, p)
         hessian_buf = __create_hessian_buf(fixed_im, p)
-        lcc_block_with_derivatives(fixed_data, moving_data,
-                                   fixed_im.voxel_to_world_matrix,
-                                   trans_mat_vox, gradient_matrix, len(p),
-                                   N_buf, lcc_buf, gradient_buf, hessian_buf,
-                                   thread_num, use_rle)
+        lcc_block_with_derivatives(
+            fixed_data,
+            moving_data,
+            fixed_im.voxel_to_world_matrix,
+            trans_mat_vox,
+            gradient_matrix,
+            len(p),
+            N_buf,
+            lcc_buf,
+            gradient_buf,
+            hessian_buf,
+            thread_num,
+            use_rle,
+        )
     else:
-        lcc_block(fixed_data, moving_data, trans_mat_vox, N_buf,
-                  lcc_buf, thread_num, use_rle)
+        lcc_block(
+            fixed_data,
+            moving_data,
+            trans_mat_vox,
+            N_buf,
+            lcc_buf,
+            thread_num,
+            use_rle,
+        )
     N_sum[0] += N_buf.sum()
     lcc_sum[0] += lcc_buf.sum(0)
     del N_buf
@@ -168,8 +195,15 @@ def __calc_lcc(fixed_im, moving_im, p, with_derivatives, N_sum, lcc_sum,
         del hessian_buf
 
 
-def lcc(fixed_im, moving_im, p, with_derivatives=True,
-        mem_limit_mb=-1, num_threads=-1, use_rle=True):
+def lcc(
+    fixed_im,
+    moving_im,
+    p,
+    with_derivatives=True,
+    mem_limit_mb=-1,
+    num_threads=-1,
+    use_rle=True,
+):
     """
     Perform block wise lcc calculation of an image pair.
 
@@ -206,53 +240,79 @@ def lcc(fixed_im, moving_im, p, with_derivatives=True,
         gradient_sum = None
         hessian_sum = None
     if fixed_im.mem_mb + moving_im.mem_mb <= mem_limit_mb:
-        __calc_lcc(fixed_im, moving_im, p, with_derivatives, N_sum, lcc_sum,
-                   gradient_sum, hessian_sum, num_threads, use_rle)
+        __calc_lcc(
+            fixed_im,
+            moving_im,
+            p,
+            with_derivatives,
+            N_sum,
+            lcc_sum,
+            gradient_sum,
+            hessian_sum,
+            num_threads,
+            use_rle,
+        )
     else:
         use_rle = False
         block_size = np.array((100, 100, 100), dtype=np.int32)
-        mem_100 = required_transform_mem_mb(block_size, fixed_im, moving_im,
-                                            t_matrix_world_from_p(p))
-        factor = math.pow(mem_limit_mb/mem_100, 1/3)
+        mem_100 = required_transform_mem_mb(
+            block_size, fixed_im, moving_im, t_matrix_world_from_p(p)
+        )
+        factor = math.pow(mem_limit_mb / mem_100, 1 / 3)
         block_size = (factor * block_size).astype(np.int32)
         # subtract overlap region for both sides of the image
         overlap_size = 2
-        for z in range(0, fixed_im.shape[0],
-                       block_size[2] - 2 * overlap_size):
+        for z in range(0, fixed_im.shape[0], block_size[2] - 2 * overlap_size):
             s_z = min(fixed_im.shape[0] - z, block_size[2])
-            for y in range(0, fixed_im.shape[1],
-                           block_size[1] - 2 * overlap_size):
+            for y in range(
+                0, fixed_im.shape[1], block_size[1] - 2 * overlap_size
+            ):
                 s_y = min(fixed_im.shape[1] - y, block_size[1])
-                for x in range(0, fixed_im.shape[2],
-                               block_size[0] - 2 * overlap_size):
+                for x in range(
+                    0, fixed_im.shape[2], block_size[0] - 2 * overlap_size
+                ):
                     s_x = min(fixed_im.shape[2] - x, block_size[0])
                     if min(s_x, s_y, s_z) > 0:
-                        fixed_edges = np.array([
-                            [x, y, z],
-                            [x + s_x, y, z],
-                            [x, y + s_y, z],
-                            [x, y, z + s_z],
-                            [x + s_x, y + s_y, z],
-                            [x + s_x, y, z + s_z],
-                            [x, y + s_y, z + s_z],
-                            [x + s_x, y + s_y, z + s_z]
-                        ], dtype=np.float64).T
-                        moving_offset, moving_shape = \
-                            transformed_offset_shape(fixed_im, moving_im,
-                                                     fixed_edges,
-                                                     t_matrix_world_from_p(p))
+                        fixed_edges = np.array(
+                            [
+                                [x, y, z],
+                                [x + s_x, y, z],
+                                [x, y + s_y, z],
+                                [x, y, z + s_z],
+                                [x + s_x, y + s_y, z],
+                                [x + s_x, y, z + s_z],
+                                [x, y + s_y, z + s_z],
+                                [x + s_x, y + s_y, z + s_z],
+                            ],
+                            dtype=np.float64,
+                        ).T
+                        moving_offset, moving_shape = transformed_offset_shape(
+                            fixed_im,
+                            moving_im,
+                            fixed_edges,
+                            t_matrix_world_from_p(p),
+                        )
                         if min(moving_shape) > 0:
-                            fixed_part = \
-                                image3d.image_part(fixed_im,
-                                                   np.array((x, y, z)),
-                                                   np.array((s_x, s_y, s_z)))
-                            moving_part = image3d.image_part(moving_im,
-                                                             moving_offset,
-                                                             moving_shape)
-                            __calc_lcc(fixed_part, moving_part, p,
-                                       with_derivatives, N_sum, lcc_sum,
-                                       gradient_sum, hessian_sum,
-                                       num_threads, use_rle)
+                            fixed_part = image3d.image_part(
+                                fixed_im,
+                                np.array((x, y, z)),
+                                np.array((s_x, s_y, s_z)),
+                            )
+                            moving_part = image3d.image_part(
+                                moving_im, moving_offset, moving_shape
+                            )
+                            __calc_lcc(
+                                fixed_part,
+                                moving_part,
+                                p,
+                                with_derivatives,
+                                N_sum,
+                                lcc_sum,
+                                gradient_sum,
+                                hessian_sum,
+                                num_threads,
+                                use_rle,
+                            )
                             del fixed_part
                             del moving_part
     N = N_sum[0]
@@ -262,7 +322,7 @@ def lcc(fixed_im, moving_im, p, with_derivatives=True,
         if with_derivatives:
             # fill hessian (symmetry ...)
             for u in range(len(p)):
-                for v in range(u+1, len(p)):
+                for v in range(u + 1, len(p)):
                     hessian_sum[v, u] = hessian_sum[u, v]
             result = (N, lcc_sum[0] / 2 / N, gradient_sum / N, hessian_sum / N)
         else:
