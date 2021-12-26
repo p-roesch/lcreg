@@ -112,22 +112,33 @@ def set_up_logging(reg_config, argv):
                 cpu_info = cpuinfo.get_cpu_info()
                 logging.info("CPU: {}".format(cpu_info["brand_raw"]))
             except Exception:
-                logging.warn("CPU: unknown type")
+                logging.info("CPU: unknown type")
             #
             # print maximum CPU frequency if value is available
-            freq = psutil.cpu_freq()
-            if freq is not None:
-                max_f = freq[2]
-                logging.info("CPU max. frequency: {} GHz".format(max_f / 1000))
+            try:
+                freq = psutil.cpu_freq()
+                if freq is not None:
+                    max_f = freq[2]
+                    logging.info(
+                        "CPU max. frequency: {} GHz".format(max_f / 1000)
+                    )
+            except Exception:
+                logging.info("psutil: CPU max. frequency not accessible")
             #
             # nr of threads
-            logging.info("CPU threads: {}".format(psutil.cpu_count()))
+            try:
+                logging.info("CPU threads: {}".format(psutil.cpu_count()))
+            except Exception:
+                logging.info("psutil: CPU nr. of threads not accessible")
             #
             # print total physical memory if value is available
-            mem = psutil.virtual_memory()
-            if mem is not None:
-                mem_total_gb = mem[0] / 2 ** 30
-                logging.info("RAM: {:.1f} GiB".format(mem_total_gb))
+            try:
+                mem = psutil.virtual_memory()
+                if mem is not None:
+                    mem_total_gb = mem[0] / 2 ** 30
+                    logging.info("RAM: {:.1f} GiB".format(mem_total_gb))
+            except Exception:
+                logging.info("psutil: Amount of RAM not accessible")
             logging.info("")
             #
             # print Python and library versions
