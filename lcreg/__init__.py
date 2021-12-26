@@ -20,4 +20,4 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 name = "lcreg"
-__version__ = "0.1.4"
+__version__ = "1.0.0"
