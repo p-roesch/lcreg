@@ -66,11 +66,11 @@ if __name__ == "__main__":
         packages=find_packages(exclude=["docs", "tests*"]),
         python_requires=">=3, <4",
         install_requires=[
-            "numpy>=1.16",
-            "scipy>=1.2",
+            "numpy>=1.21",
+            "scipy>=1.7",
             "bcolz>=1.2",
-            "psutil>=5.6",
-            "py-cpuinfo>=7.0",
+            "psutil>=5.8",
+            "py-cpuinfo>=8.0",
         ],
         entry_points={
             "console_scripts": [
