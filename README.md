@@ -1,17 +1,18 @@
-# *lcreg* - Efficient registration of large 3D images 
+# *lcreg* - Efficient registration of large 3D images
 
-Rigid and affine registration of large scalar 3D images is an import step for both medical and non-medical image processing. The distinguishing feature of *lcreg* is its capability to efficiently register images that do not fit into system memory. *lcreg* is based on the optimisation of the local correlation similarity measure [1] using a novel image encoding scheme fostering on-the-fly image compression and decompression [2].
+Rigid and affine registration of large scalar 3D images is an import step for both medical and non-medical image processing. The distinguishing feature of *lcreg* is its capability to efficiently register 3D images even if they do not fit into system memory. *lcreg* is based on the optimisation of the local correlation similarity measure [1] using a novel image encoding scheme fostering on-the-fly image compression and decompression [2].
 
-# Tutorial and samples
-The *lcreg tutorial* provides a step by step guide for the installation and practical application of the software and is complemented by sample data and configuration files (156 MB). Furthermore, binary installers for the *blosc* package have been created. These ressources can be downloaded from [here](https://cloud.hs-augsburg.de/index.php/s/iR8BBZM2n6zcxSp).
 
-# Contact and support
-ResearchGate members please use the [project page](https://www.researchgate.net/project/Efficient-registration-of-large-3D-images-lcreg) to post comments or ask questions. The email address of the project is lcreg@hs-augsburg.de. 
+# Tutorials, samples and *bcolz* binaries
+The *lcreg tutorial* provides a step by step guide for the installation and practical application of the software and is complemented by sample data and configuration files (156 MB). Furthermore, binary installers for the [*bcolz*](https://github.com/Blosc/bcolz) package have been created in order to support the installation of *lcreg* with recent Python versions. These ressources can be downloaded from [here](https://cloud.hs-augsburg.de/index.php/s/iR8BBZM2n6zcxSp).
+
+# Please give feedback
+Please send comments, questions and general feedback to the email address of the project which is lcreg@hs-augsburg.de or use the corresponding functionality of the ResearchGate [project page](https://www.researchgate.net/project/Efficient-registration-of-large-3D-images-lcreg).
 
 # Acknowledgements
-Many thanks to Karl-Heinz Kunzelmann for his support, many helpful 
+Many thanks to Karl-Heinz Kunzelmann for his support, many helpful
 discussions and for making dental test images available.
-This work benefited from the use of [ITK-SNAP](http://www.itksnap.org/pmwiki/pmwiki.php), [bcolz](http://bcolz.blosc.org/en/latest), [numpy](https://numpy.org) [scipy](https://scipy.org/scipylib/index.html) and [cython](https://cython.org). The University of Applied Sciences, Augsburg, in particular the Faculty of 
+This work benefited from the use of [ITK-SNAP](http://www.itksnap.org/pmwiki/pmwiki.php), [bcolz](http://bcolz.blosc.org/en/latest), [numpy](https://numpy.org) [scipy](https://scipy.org/scipylib/index.html) and [cython](https://cython.org). The University of Applied Sciences, Augsburg, in particular the Faculty of
 Computer Science supported this project by granting sabbatical leaves.
 Special thanks to Gisela Dachs, Andreas Gärtner, Evi Köbele,
 Stefan König, Dominik Lüder, Thomas Obermeier and Sigrid Podratzky for acquiring test images and for keeping computers up and running.
