@@ -24,7 +24,7 @@
 """
 convert compressed image to mhd and view the result with itkSNAP
 """
-from sys import argv
+import sys
 import os
 from subprocess import call
 import tempfile
@@ -32,25 +32,26 @@ import shutil
 from lcreg import image3d
 
 SNAP_EXE = "itksnap"
+MAC_OS_SNAP_ENVIRON = "ITKSNAP_APP_DIR"
 
 
 def main():
     #
     # usage message
-    if len(argv) < 3:
+    if len(sys.argv) < 3:
         print("usage: view_compressed_images tmp_prefix path_name_1 ", end="")
         print(" path_name_2 ...")
         return
     #
     # check for valid temporary path
-    root_tmp_path = argv[1]
+    root_tmp_path = sys.argv[1]
     if root_tmp_path[-1] != os.path.sep:
         root_tmp_path += os.path.sep
     tmp_path = tempfile.mkdtemp(prefix=root_tmp_path)
     #
     # export bcolz images to mhd format and remember mhd file names
     mhd_file_names = []
-    for bcolz_name in argv[2:]:
+    for bcolz_name in sys.argv[2:]:
         while bcolz_name[-1] == os.path.sep:
             bcolz_name = bcolz_name[:-1]
         mhd_file_names.append(
@@ -63,6 +64,20 @@ def main():
             return
     #
     # set up command and call it
+    if sys.platform == "darwin":
+        if MAC_OS_SNAP_ENVIRON in os.environ:
+            SNAP_EXE = (
+                os.environ[MAC_OS_SNAP_ENVIRON]
+                + os.sep
+                + "ITK-SNAP.app/Contents/MacOS/ITK-SNAP"
+            )
+        else:
+            print(
+                f"\nRequired environment variable {MAC_OS_SNAP_ENVIRON}"
+                " not set."
+            )
+            print("Exiting ...\n")
+            sys.exit(-1)
     cmd = SNAP_EXE + " -g " + mhd_file_names[0]
     if len(mhd_file_names) > 1:
         cmd += " -o"
