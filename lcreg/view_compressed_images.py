@@ -31,9 +31,6 @@ import tempfile
 import shutil
 from lcreg import image3d
 
-SNAP_EXE = "itksnap"
-MAC_OS_SNAP_ENVIRON = "ITKSNAP_APP_DIR"
-
 
 def main():
     #
@@ -65,8 +62,9 @@ def main():
     #
     # set up command and call it
     if sys.platform == "darwin":
+        MAC_OS_SNAP_ENVIRON = "ITKSNAP_APP_DIR"
         if MAC_OS_SNAP_ENVIRON in os.environ:
-            SNAP_EXE = (
+            snap_exe = (
                 os.environ[MAC_OS_SNAP_ENVIRON]
                 + os.sep
                 + "ITK-SNAP.app/Contents/MacOS/ITK-SNAP"
@@ -78,7 +76,12 @@ def main():
             )
             print("Exiting ...\n")
             sys.exit(-1)
-    cmd = SNAP_EXE + " -g " + mhd_file_names[0]
+    elif sys.platform.startswith("win"):
+        snap_exe = "ITK-SNAP"
+    else:
+        snap_exe = "itksnap"
+
+    cmd = snap_exe + " -g " + mhd_file_names[0]
     if len(mhd_file_names) > 1:
         cmd += " -o"
     for fn in mhd_file_names[1:]:
