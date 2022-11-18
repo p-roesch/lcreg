@@ -26,10 +26,10 @@
 
 import logging
 import ast
-import multiprocessing
 import os.path
 import numpy as np
 import bcolz
+import psutil
 
 from lcreg import image3d
 from lcreg import lcreg_lib as cy_ip
@@ -231,7 +231,7 @@ def mask_level(reg_config, level):
     # number of threads to use
     thread_num = reg_config.getint("DEFAULT", "nr_of_threads")
     if thread_num < 0:
-        thread_num = multiprocessing.cpu_count()
+        thread_num = psutil.cpu_count()
     #
     # mask fixed image
     in_im_name = ast.literal_eval(reg_config["pyramid"]["fixed_grey_files"])[
