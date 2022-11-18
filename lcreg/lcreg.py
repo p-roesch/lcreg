@@ -27,7 +27,6 @@ import logging
 import configparser
 import os
 import ast
-import multiprocessing
 from sys import modules, argv
 import time
 import datetime
@@ -260,18 +259,8 @@ def import_input_images(reg_config, log_config):
         arg_list.append((reg_config, "fixed_mask", True, log_config))
     if reg_config["DEFAULT"]["moving_mask_image_name"] != "None":
         arg_list.append((reg_config, "moving_mask", True, log_config))
-    # import images in parallel only if not profiling
-    if "profile" in modules or "cProfile" in modules:
-        name_list = list(map(__import_image, arg_list))
-    else:
-        nr_of_threads = reg_config.getint("DEFAULT", "nr_of_threads")
-        if nr_of_threads <= 0:
-            nr_of_processes = min(multiprocessing.cpu_count(), len(arg_list))
-        else:
-            nr_of_processes = nr_of_threads
-        pool = multiprocessing.Pool(nr_of_processes)
-        name_list = pool.map(__import_image, arg_list)
-        pool.close()
+    # import images
+    name_list = list(map(__import_image, arg_list))
     #
     name_list.reverse()
     #
