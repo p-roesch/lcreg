@@ -283,7 +283,11 @@ class Image3D(object):
             float: total voxel surface in mm^2
         """
 
-        single_voxel_surface = 2.0 * (self.spacing ** 2).sum()
+        single_voxel_surface = 2.0 * (
+            self.spacing[0] * self.spacing[1]
+            + self.spacing[0] * self.spacing[2]
+            + self.spacing[1] * self.spacing[2]
+        )
         return self.nr_of_voxels * single_voxel_surface
 
     @property
